@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Filter editor</title>
+	<script   src="https://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
+	<script   src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"   integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="   crossorigin="anonymous"></script>
+	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+	<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<!--<script src="socket.io/socket.io.js"></script>-->
+
+	<script>
+			// Create SocketIO instance, connect
+			$("document").ready(function(){
+				$("#divDraggable").draggable({
+					cursor: "move",
+				  stop: function( event, ui ) {
+						socket.emit("filter", $("#divDraggable").prop("outerHTML"));
+					}
+				});
+
+				var socket= io.connect('http://localhost:3001');
+
+				// Add a connect listener
+				socket.on('connect',function() {
+					console.log('Client has connected to the server!');
+					// Sends a message to the server via sockets
+
+				});
+				// Add a connect listener
+				socket.on('filter',function(data) {
+					console.log('Received a message from the server!',data);
+				});
+				// Add a disconnect listener
+				socket.on('disconnect',function() {
+					console.log('The client has disconnected!');
+				});
+
+				$("#btnAplicar").click(function(){
+
+					var div = $("#divDraggable").html($("#filterText").val());
+					socket.emit("filter", div.html());
+
+				});
+
+			})
+
+	</script>
+</head>
+<body>
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="collapsed navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					 <span class="icon-bar"></span> </button>
+					 <a href="#" class="navbar-brand">Magma-playout</a>
+				 </div>
+				 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+					 <ul class="nav navbar-nav">
+						 <li class="active">
+							 <a href="#">Home</a>
+						 </li>
+					 </ul>
+				 </div>
+			 </div>
+		  </nav>
+
+	<div id="container" class="row">
+			<div class="panel panel-primary"  style="width:49%; height:800px; display:inline-table">
+				<div class="panel-heading">
+					<h3 class="panel-title">Reproductor</h3>
+				 </div>
+				 <div class="panel-body" style="position:relative;">
+					 	<div id="divDraggable" style="position:absolute; z-index:200;"></div>
+					 	<video id="video" style=" position: absolute;" src="http://localhost:8001/consume/first" width="640" autoplay="autoplay" />
+				 </div>
+			 </div>
+
+			 <div class="panel panel-primary"  style="width:49%; height:800px; display:inline-table";>
+ 				<div class="panel-heading">
+ 					<h3 class="panel-title">Opciones de filtros</h3>
+ 				 </div>
+ 				 <div class="panel-body">
+					 <input class="form-control" type="text" id="filterText"/>
+					 <button class="btn btn-primary" type="button" id="btnAplicar">Agregar contenido html</button>
+ 				 </div>
+ 			 </div>
+
+
+	</div>
+
+</body>
+</html>
