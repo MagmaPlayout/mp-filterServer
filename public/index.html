@@ -17,13 +17,9 @@
 
 	<script>
 			// Create SocketIO instance, connect
+
+			var lstFilter = [];
 			$("document").ready(function(){
-				$("#divDraggable").draggable({
-					cursor: "move",
-				  stop: function( event, ui ) {
-						socket.emit("filter", $("#divDraggable").prop("outerHTML"));
-					}
-				});
 
 				var socket= io.connect('http://localhost:3001');
 
@@ -33,21 +29,79 @@
 					// Sends a message to the server via sockets
 
 				});
-				// Add a connect listener
-				socket.on('filter',function(data) {
-					console.log('Received a message from the server!',data);
+
+				//creo un select con options por cada filtro.
+				socket.on('filterList',function(filterList) {
+					console.log("Lista de filtros: ");
+					console.log(filterList);
+					lstFilter = filterList;
+					$("#selFilter").html("");
+
+					$.each(filterList,function(idx,item){
+						$("#selFilter").append($("<option>",{"val":item.id}).html(item.name));
+					});
+					$("#selFilter").append($("<option>",{"val" : null, "selected": "selected"}).html("Seleccione una filtro"));
+
+
 				});
+
 				// Add a disconnect listener
 				socket.on('disconnect',function() {
 					console.log('The client has disconnected!');
 				});
 
-				$("#btnAplicar").click(function(){
 
-					var div = $("#divDraggable").html($("#filterText").val());
-					socket.emit("filter", div.html());
+				// Cuando se selecciona un filtro
+				$("#selFilter").change(function(){
+					if(!$( "#selFilter option:selected" ).val()){
+						$("#btnSave").prop( "disabled", true );
+					}
+					else{
+						$("#btnSave").prop( "disabled", false );
+						$("#filterContent").html("");
+						var htmlCode = lstFilter[$("#selFilter").prop('selectedIndex')].htmlCode;
+						$("#filterContent").html(htmlCode);
+					}
+
 
 				});
+
+				//elementos html que se renderizan inmediatamente en melt.
+				$("#btnAddContent").click(function(){
+
+					var filterItem = $("<div>").html($("#filterText").val());
+					filterItem.draggable({
+						cursor: "move",
+					  stop: function( event, ui ) {
+							//socket.emit("filter", $("#divDraggable").prop("outerHTML"));
+						}
+					});
+					$("#filterContent").append(filterItem);
+					$("#filterText").val("");
+					socket.emit("filterEditor", $("#filterContent").html());
+
+				});
+
+				//guarda los cambios del filtro seleccionado.
+				$("#btnSave").click(function(){
+					var selectedIndex = $("#selFilter").prop('selectedIndex');
+					lstFilter[selectedIndex].htmlCode = $("#filterContent").html();
+					socket.emit("filterSave", lstFilter[selectedIndex]);
+				});
+
+				//nuevo filtro
+				$("#btnAdd").click(function(){
+
+					var newFilter = {
+						id: lstFilter.length,
+						name: $("#newFilter_name").val(),
+						htmlCode: ""
+					};
+
+
+					socket.emit("filterAdd", newFilter);
+				});
+
 
 			})
 
@@ -79,9 +133,9 @@
 				<div class="panel-heading">
 					<h3 class="panel-title">Reproductor</h3>
 				 </div>
-				 <div class="panel-body" style="position:relative;">
-					 	<div id="divDraggable" style="position:absolute; z-index:200;"></div>
-					 	<video id="video" style=" position: absolute;" src="http://localhost:8001/consume/first" width="640" autoplay="autoplay" />
+				 <div class="panel-body" >
+					 	<div id="filterContent" style="position:absolute; z-index:200;"></div>
+					 	<video id="video"  src="http://localhost:8001/consume/first" width="640" autoplay="autoplay" />
 				 </div>
 			 </div>
 
@@ -90,13 +144,48 @@
  					<h3 class="panel-title">Opciones de filtros</h3>
  				 </div>
  				 <div class="panel-body">
-					 <input class="form-control" type="text" id="filterText"/>
-					 <button class="btn btn-primary" type="button" id="btnAplicar">Agregar contenido html</button>
+					 <div class="form-group">
+						  <button class="btn btn-success" type="button" id="btnNew" data-toggle="modal" data-target="#myModal">+</button>
+						</div>
+
+					 <div class="form-group">
+						 <select id="selFilter" class="form-control"></select>
+  					 <button class="btn btn-success" type="button" disabled id="btnSave">Guardar cambios</button>
+					 </div>
+
+					 <div class="form-group">
+						 <input class="form-control" type="text" id="filterText"/>
+						<button class="btn btn-success" type="button" id="btnAddContent">Agregar contenido</button>
+					 </div>
+					 <p id="auxName" style="visibility:hidden;"></p>
+
+
  				 </div>
  			 </div>
 
 
 	</div>
+	<!-- Modal -->
+	  <div class="modal fade" id="myModal" role="dialog">
+	    <div class="modal-dialog">
 
+	      <!-- Modal content-->
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="modal-title">New Filter</h4>
+	        </div>
+	        <div class="modal-body">
+	          <label>Name:</label>
+						 <input class="form-control" type="text" id="newFilter_name"/>
+	        </div>
+	        <div class="modal-footer">
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+	          <button id="btnAdd"  type="button" class="btn btn-success" data-dismiss="modal">Save</button>
+	        </div>
+	      </div>
+
+	    </div>
+	  </div>
 </body>
 </html>

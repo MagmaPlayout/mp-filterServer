@@ -7,9 +7,9 @@
   function init() {
 
       var socket = io.connect('http://localhost:3001');
-      socket.on("filter",function(data){
+      socket.on("filterChanged",function(data){
 
-  			$("#banner").html(data);
+  			$("#container").html(data);
   		});
 
       webvfx.renderRequested.connect(function(){}); // todavia no entiendo bien esta linea...
@@ -23,6 +23,6 @@
   </script>
 </head>
 <body>
-    <div id="banner" style="position:relative;"></div>
+    <div id="container" style="position:relative;"></div>
 </body>
 </html>
