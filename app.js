@@ -1,11 +1,13 @@
-var express = require ("express");
-var app = new express();
-var http = require("http").Server(app);
-var io = require("socket.io")(http);
-var filter = require("./filter.js");
-var config = require("./config.js")
-var Log = require ("log"),
-	log = new Log("debug");
+var express = require ("express")
+, app = new express()
+, http = require("http").Server(app)
+, io = require("socket.io")(http)
+, filter = require("./filter.js")
+, config = require("./config.js")
+, filterServer = require("./filterServer.js")
+, Log = require ("log")
+,	log = new Log("debug")
+;
 
 var port = process.env.PORT || config.app.port;
 
@@ -14,6 +16,9 @@ app.use(express.static(__dirname + "/public"));
 app.get('/',function(req,res){
 	res.redirect('index.html');
 });
+
+//filter server
+filterServer.init(io);
 
 //---------------------------------------------------
 //-------------- SOCKETS ----------------------------
@@ -35,6 +40,7 @@ io.on('connection',function(socket){
 
 		//Esta linea envia los cambios al socket que esta escuchando en melt
 		socket.broadcast.emit('filterChanged',filterHtml);
+
 	});
 
 	//actualizo un filtro.
@@ -54,6 +60,8 @@ io.on('connection',function(socket){
 
 		});
 	});
+
+
 });
 
 //---------------------------------------------------
