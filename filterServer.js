@@ -20,8 +20,9 @@ filterServer.prototype.init = function(io){
     if(channel=="FSCP"){
       // Adds html content to "filter-banner"
       if(message.includes("SETFILTER")){
-        log.info("SETFILTER message received");
-        var idFilter = str.split(" ");
+        var idFilter = message.split(" ")[1];
+        log.info("SETFILTER message received. IdFilter= " + idFilter );
+
         filter.get(idFilter,function(error,reply){
           if(!error) {
               io.sockets.emit('filterChanged',reply.htmlCode);

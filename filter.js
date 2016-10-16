@@ -9,6 +9,7 @@ var Log = require ("log"),
  * @param {function} callback
  */
 var getAll = function (callback){
+	// to-do sacar hardcodeo del largo.
 	redisClient.lrange('filterList', 0, 100,function(err, reply){
     var lstFilter = null;
 
@@ -27,7 +28,6 @@ var getAll = function (callback){
 
 	});
 }
-
 
 /**
  * Actualiza los datos de un filtro
@@ -65,7 +65,15 @@ var add =  function (filter,callback){
  * Obtiene un filtro por su id
   * @param {number} id
  */
-var get = function (id){
+var get = function (id,callback){
+	redisClient.lrange("filterList",id,id,function(error,reply){
+		if(!error){
+			callback(error,JSON.parse(reply));
+		}
+		else {
+			return false;
+		}
+	})
 
 }
 
@@ -75,6 +83,9 @@ var del = function (filter){
 var delAll = function (){
 
 }
+
+
+
 
 
 exports.getAll = getAll;
