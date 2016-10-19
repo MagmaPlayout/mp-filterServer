@@ -12,6 +12,9 @@ var express = require ("express")
 var port = process.env.PORT || config.app.port;
 
 app.use(express.static(__dirname + "/public"));
+app.use("/public/js", express.static(__dirname + "/public/js"));
+app.use("/public/css", express.static(__dirname + "/public/css"));
+
 
 app.get('/',function(req,res){
 	res.redirect('index.html');
