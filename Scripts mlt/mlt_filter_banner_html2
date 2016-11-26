@@ -1,7 +1,0 @@
-#!/bin/bash
-
-export DISPLAY=${DISPLAY:-:0}
-"${VFX_MELT:-melt}" red.mlt -consumer sdl mlt_profile=square_pal -filter webvfx:http://localhost:3001/filter-banner.html
-#"${VFX_MELT:-melt}" -verbose "${VFX_SOURCE:-red.mlt}" out=299 \
- #  -filter webvfx:localhost:http://localhost:3000/filter-banner2.html \
-  #  -consumer sdl

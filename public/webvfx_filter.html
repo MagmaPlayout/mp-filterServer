@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <script src="js/jquery-3.1.1.min.js"></script>
+        <script src="js/socket.io-1.4.5.js"></script>
+        <script type="text/javascript">
+            function init() {
+                var loc = window.location;
+                var socket = io.connect('http://'+loc.hostname+':'+loc.port);
+                
+                socket.on("filterChanged", function (data) {
+                    $("#container").html(data);
+                });
+
+                webvfx.renderRequested.connect(function () {}); // todavia no entiendo bien esta linea...
+                webvfx.imageTypeMap = {"sourceImage": webvfx.SourceImageType};
+                webvfx.readyRender(true);
+            }
+            
+            window.addEventListener("load", init, false);
+        </script>
+    </head>
+    <body>
+        <div id="container" style="position:relative;"></div>
+    </body>
+</html>

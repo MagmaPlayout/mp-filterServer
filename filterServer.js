@@ -1,46 +1,63 @@
-var redis = require("redis")
-, filter = require("./filter.js")
-, Log = require ("log")
-, log = new Log("debug")
-, redisClient = redis.createClient()
-;
+/**
+ * Listens to FSCP commands and act's accordingly when one arrives.
+ * 
+ * Currently supported commands:
+ *      SETFILTER {filter html code}
+ *      CLEARFILTER
+ */
 
-function filterServer(){
-  log.info("filterServer - new instance created");
-}
+var config = require("./config.js");
+var redis = require("redis");
+var Log = require("log");
+
+var log = new Log("debug");
+var redisClient = redis.createClient(config.redis.port, config.redis.host);
+var FILTERSERVER_CHANNEL = config.redis.channel;
+
+function filterServer() {}
+
+// Handle redis connection issues
+redisClient.on("error", function(err){
+    log.info("Filter Server - Could not connect to the redis sever. " + err);
+});
+
 
 /**
- * Initializes filter server.
- * @param {object} socket
+ * Launches the filter server.
+ * @param {type} io
  */
-filterServer.prototype.init = function(io){
-  redisClient.subscribe("FSCP");
+filterServer.prototype.init = function (io) {
+    redisClient.subscribe(FILTERSERVER_CHANNEL);
 
-  redisClient.on("message",function(channel, message){
-    if(channel=="FSCP"){
-      // Adds html content to "filter-banner"
-      if(message.includes("SETFILTER")){
-        var idFilter = message.split(" ")[1];
-        log.info("SETFILTER message received. IdFilter= " + idFilter );
+    redisClient.on("message", function (channel, message) {
+        if (channel === FILTERSERVER_CHANNEL) {
+            var filterHtmlCode = -1;
 
-        filter.get(idFilter,function(error,reply){
-          if(!error) {
-              io.sockets.emit('filterChanged',reply.htmlCode);
-          }
-          else{
-            log.info("Could not get the filter");
-          }
-        });
-      };
-
-      //Clear filter
-      if(message.includes("CLEARFILTER")){
-          log.info("CLEARFILTER message received");
-          io.sockets.emit('filterChanged',"");
-      }
-    }
-
-  });
+            // Check for supported commands
+            if (message.indexOf("SETFILTER") !== -1) {
+                var opcode = message.indexOf(" ");
+                var htmlCode = message.substring(opcode,message.length);
+                
+                if(htmlCode.length !== 0){
+                    filterHtmlCode = htmlCode;
+                }
+                
+                log.info("SETFILTER message received. HtmlCode = " + htmlCode);
+            }
+            else if (message.indexOf("CLEARFILTER") !== -1) {
+                log.info("CLEARFILTER message received");
+                filterHtmlCode = "";
+            }
+            else {
+                log.err("Unsupported FSCP command. " + message);
+            }
+            
+            // Sends the filter htmlCode to the webvfx_filter.html if any
+            if(filterHtmlCode !== -1){
+                io.sockets.emit('filterChanged', filterHtmlCode);
+            }
+        }
+    });
 };
 
 module.exports = new filterServer();
